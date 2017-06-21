@@ -3,7 +3,17 @@
 // Last Modified:
 folder('ldop')
 
-def ldopImages = ['ldop-docker-compose']
+def ldopImages = ['ldop-gerrit', 
+                  'ldop-jenkins', 
+                  'ldop-jenkins-slave',
+                  'ldop-ldap',
+                  'ldop-ldap-ltb',
+                  'ldop-ldap-phpadmin',
+                  'ldop-logstash',
+                  'ldop-nexus',
+                  'ldop-nginx',
+                  'ldop-sensu',
+                  'ldop-sonar']
 
 ldopImages.each {
   ldopImageName->
@@ -32,7 +42,7 @@ ldopImages.each {
       githubPush()
     }
     steps {
-      shell('echo Hello World!')
+      shell("docker build -t liatrio/${ldopImageName}:dev .")
     }
   }
 }
