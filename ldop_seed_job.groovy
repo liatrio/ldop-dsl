@@ -3,6 +3,7 @@
 // Last Modified:
 folder('ldop')
 
+// Create LDOP image jobs
 def ldopImages = ['ldop-gerrit', 
                   'ldop-jenkins', 
                   'ldop-jenkins-slave',
@@ -35,14 +36,37 @@ ldopImages.each {
         remote {
           url(repoURL)
         }
+        extensions {
+          gitTagMessageExtension()
+        }
       }
     }
     triggers {
-      cron('@weekly')
       githubPush()
     }
     steps {
-      shell("docker build -t liatrio/${ldopImageName}:dev .")
+      shell("docker build -t liatrio/${ldopImageName}:\${GIT_TAG_NAME} .")
+      // downstreamParameterized {
+      //   trigger('ldop/integration-testing') {
+      //     block {
+      //       buildStepFailure()
+      //       failure()
+      //       unstable()
+      //     } 
+      //   }
+      // }
     }
   }
 }
+
+// Create LDOP Integration Testing Job
+// job('ldop/integration-testing') {
+//   parameters {
+    
+//   }
+//   steps {
+//     shell('echo')
+//   }
+// }
+
+// Create LDOP Image Deployment Jobs
