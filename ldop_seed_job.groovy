@@ -101,12 +101,13 @@ job('ldop/ldop-integration-testing') {
       remote {
         url(repoURL)
       }
+      branch('master')
     }
   }
   steps {
-    shell('echo "This is where the tests would go"')
-    shell('echo \$IMAGE_VERSION')
-    shell('echo \$IMAGE_NAME')
+    shell('export SED_CMD="/    image: liatrio/\${IMAGE_NAME}:*/c\\    image: liatrio/\$IMAGE_NAME:\$IMAGE_VERSION"')
+    shell('sed -i "${SED_CMD}" docker-compose.yml')
+    shell('cat docker-compose.yml')
   }
   publishers {
     downstreamParameterized {
@@ -128,19 +129,7 @@ job('ldop/ldop-image-deploy') {
     textParam('IMAGE_NAME')
   }
   steps {
-    dockerBuildAndPublish {
-      repositoryName('jbankes/\$IMAGE_NAME')
-      tag('\$IMAGE_VERSION') 
-      registryCredentials('docker_temp_password')
-      skipBuild(true)
-    }
-    dockerBuildAndPublish {
-      repositoryName('jbankes/\$IMAGE_NAME')
-      tag('\$IMAGE_VERSION') 
-      registryCredentials('docker_temp_password')
-      skipBuild(true)
-    }
-    // shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
-    // shell('docker push jbankes/\$IMAGE_NAME:latest')
+    shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
+    shell('docker push jbankes/\$IMAGE_NAME:latest')
   }
 }
