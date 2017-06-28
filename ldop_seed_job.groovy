@@ -20,7 +20,6 @@ ldopImages.each {
   ldopImageName->
 
   def repoURL = "https://github.com/liatrio/" + ldopImageName + ".git"
-  // def projectURL = "https://github.com/liatrio/" + ldopImageName 
   def singleImageJobName = ldopImageName + '-1-build'
 
   job('ldop/' + singleImageJobName){
@@ -45,7 +44,7 @@ ldopImages.each {
       githubPush()
     }
     steps {
-      shell("docker build -t liatrio/${ldopImageName}:\${GIT_TAG_NAME} .")
+      shell("docker build -t jbankes/${ldopImageName}:\${GIT_TAG_NAME} .")
     }
     publishers {
       downstreamParameterized {
@@ -68,6 +67,7 @@ job('ldop/ldop-integration-testing') {
     textParam('IMAGE_NAME')
   }
   steps {
+    shell('echo "This is where the tests would go"')
     shell('echo \$IMAGE_VERSION')
     shell('echo \$IMAGE_NAME')
   }
@@ -90,7 +90,6 @@ job('ldop/ldop-image-deploy') {
     textParam('IMAGE_NAME')
   }
   steps {
-    shell('echo \$IMAGE_VERSION')
-    shell('echo \$IMAGE_NAME')
+    shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
   }
 }
