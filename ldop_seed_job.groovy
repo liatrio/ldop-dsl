@@ -87,10 +87,21 @@ job('ldop/ldop-docker-compose') {
 
 // Create LDOP Integration Testing Job
 job('ldop/ldop-integration-testing') {
+  def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
   description('This job was created with automation. Manual edits to this job are discouraged.')
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
+  }
+  properties {
+    githubProjectUrl(repoURL)
+  }
+  scm {
+    git {
+      remote {
+        url(repoURL)
+      }
+    }
   }
   steps {
     shell('echo "This is where the tests would go"')
@@ -117,7 +128,19 @@ job('ldop/ldop-image-deploy') {
     textParam('IMAGE_NAME')
   }
   steps {
-    shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
-    shell('docker push jbankes/\$IMAGE_NAME:latest')
+    dockerBuildAndPublish {
+      repositoryName('jbankes/\$IMAGE_NAME')
+      tag('\$IMAGE_VERSION') 
+      registryCredentials('docker_temp_password')
+      skipBuild(true)
+    }
+    dockerBuildAndPublish {
+      repositoryName('jbankes/\$IMAGE_NAME')
+      tag('\$IMAGE_VERSION') 
+      registryCredentials('docker_temp_password')
+      skipBuild(true)
+    }
+    // shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
+    // shell('docker push jbankes/\$IMAGE_NAME:latest')
   }
 }
