@@ -46,27 +46,51 @@ ldopImages.each {
     }
     steps {
       shell("docker build -t liatrio/${ldopImageName}:\${GIT_TAG_NAME} .")
-      // downstreamParameterized {
-      //   trigger('ldop/integration-testing') {
-      //     block {
-      //       buildStepFailure()
-      //       failure()
-      //       unstable()
-      //     } 
-      //   }
-      // }
+    }
+    publishers {
+      downstreamParameterized {
+        trigger('ldop/ldop-integration-testing') { 
+          condition('SUCCESS')
+          parameters {
+            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
+            predefinedProp('IMAGE_NAME', ldopImageName)
+          }
+        }
+      }
     }
   }
 }
 
 // Create LDOP Integration Testing Job
-// job('ldop/integration-testing') {
-//   parameters {
-    
-//   }
-//   steps {
-//     shell('echo')
-//   }
-// }
+job('ldop/ldop-integration-testing') {
+  parameters {
+    textParam('IMAGE_VERSION')
+    textParam('IMAGE_NAME')
+  }
+  steps {
+    shell('echo \$IMAGE_VERSION')
+    shell('echo \$IMAGE_NAME')
+  }
+  publishers {
+    downstreamParameterized {
+      trigger('ldop/ldop-image-deploy') { 
+        condition('SUCCESS')
+        parameters {
+          currentBuild()
+        }
+      }
+    }
+  }
+}
 
 // Create LDOP Image Deployment Jobs
+job('ldop/ldop-image-deploy') {
+  parameters {
+    textParam('IMAGE_VERSION')
+    textParam('IMAGE_NAME')
+  }
+  steps {
+    shell('echo \$IMAGE_VERSION')
+    shell('echo \$IMAGE_NAME')
+  }
+}
