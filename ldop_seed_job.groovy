@@ -44,7 +44,8 @@ ldopImages.each {
       githubPush()
     }
     steps {
-      shell("docker build -t jbankes/${ldopImageName}:\${GIT_TAG_NAME} -t jbankes/${ldopImageName}:latest .")
+      shell("docker build -t jbankes/${ldopImageName}:latest .")
+      shell("docker push jbankes/${ldopImageName}:latest")
     }
     publishers {
       downstreamParameterized {
@@ -105,8 +106,7 @@ job('ldop/ldop-integration-testing') {
     }
   }
   steps {
-    shell('export SED_CMD="/    image: liatrio/\${IMAGE_NAME}:*/c\\    image: liatrio/\$IMAGE_NAME:\$IMAGE_VERSION"')
-    shell('sed -i "${SED_CMD}" docker-compose.yml')
+    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\     image: liatrio/${IMAGE_NAME}:latest" docker-compose.yml')
     shell('cat docker-compose.yml')
   }
   publishers {
@@ -123,13 +123,26 @@ job('ldop/ldop-integration-testing') {
 
 // Create LDOP Image Deployment Jobs
 job('ldop/ldop-image-deploy') {
+  def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
   description('This job was created with automation. Manual edits to this job are discouraged.')
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
   }
+  properties {
+    githubProjectUrl(repoURL)
+  }
+  scm {
+    git {
+      remote {
+        url(repoURL)
+      }
+      branch('master')
+    }
+  }
   steps {
-    shell('docker push jbankes/\$IMAGE_NAME:\$IMAGE_VERSION')
-    shell('docker push jbankes/\$IMAGE_NAME:latest')
+    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\     image: liatrio/${IMAGE_NAME}:${IMAGE_VERSION}" docker-compose.yml')
+    shell('docker tag jbankes/${IMAGE_NAME}:latest jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
+    shell('docker push jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
   }
 }
