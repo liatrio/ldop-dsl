@@ -123,25 +123,12 @@ job('ldop/ldop-integration-testing') {
 
 // Create LDOP Image Deployment Jobs
 job('ldop/ldop-image-deploy') {
-  def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
   description('This job was created with automation. Manual edits to this job are discouraged.')
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
   }
-  properties {
-    githubProjectUrl(repoURL)
-  }
-  scm {
-    git {
-      remote {
-        url(repoURL)
-      }
-      branch('master')
-    }
-  }
   steps {
-    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\     image: liatrio/${IMAGE_NAME}:${IMAGE_VERSION}" docker-compose.yml')
     shell('docker tag jbankes/${IMAGE_NAME}:latest jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
     shell('docker push jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
   }
