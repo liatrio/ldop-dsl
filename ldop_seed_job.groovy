@@ -82,7 +82,7 @@ job('ldop/ldop-docker-compose') {
     githubPush()
   } 
   steps {
-    shell('echo "TODO: Test the platform"') 
+    shell('./test/integration/run-integration-test.sh') 
   }
 }
 
@@ -107,7 +107,7 @@ job('ldop/ldop-integration-testing') {
   }
   steps {
     shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\     image: liatrio/${IMAGE_NAME}:latest" docker-compose.yml')
-    shell('cat docker-compose.yml')
+    shell('./test/integration/run-integration-test.sh')
   }
   publishers {
     downstreamParameterized {
