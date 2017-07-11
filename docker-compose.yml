@@ -2,6 +2,7 @@ version: '3'
 services:
     jenkins:
         image: jenkins
+        build: .
         volumes:
             - .:/var/jenkins_home/localdev
             - /var/run/docker.sock:/var/run/docker.sock
