@@ -94,6 +94,9 @@ job('ldop/ldop-integration-testing') {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
   }
+  wrappers{
+    colorizeOutput()
+  }
   properties {
     githubProjectUrl(repoURL)
   }
@@ -106,7 +109,7 @@ job('ldop/ldop-integration-testing') {
     }
   }
   steps {
-    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\     image: liatrio/${IMAGE_NAME}:latest" docker-compose.yml')
+    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\    image: liatrio/${IMAGE_NAME}:latest" docker-compose.yml')
     shell('./test/integration/run-integration-test.sh')
   }
   publishers {
@@ -127,6 +130,9 @@ job('ldop/ldop-image-deploy') {
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
+  }
+  wrappers{
+    colorizeOutput()
   }
   steps {
     shell('docker tag jbankes/${IMAGE_NAME}:latest jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
