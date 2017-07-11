@@ -104,6 +104,9 @@ job('ldop/ldop-integration-testing') {
     textParam('IMAGE_NAME')
     textParam('TOPIC')
   }
+  wrappers{
+    colorizeOutput()
+  }
   properties {
     githubProjectUrl(repoURL)
   }
@@ -124,7 +127,6 @@ sed -i "/liatrio\/${IMAGE_NAME}/c\    image: jbankes/${IMAGE_NAME}:${TOPIC}" doc
 export TF_VAR_branch_name="${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
-
     )
   }
   publishers {
@@ -146,6 +148,9 @@ job('ldop/ldop-image-deploy') {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
     textParam('TOPIC')
+  }
+  wrappers{
+    colorizeOutput()
   }
   steps {
     shell('docker tag jbankes/${IMAGE_NAME}:${TOPIC} jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
