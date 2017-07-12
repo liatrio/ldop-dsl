@@ -121,10 +121,10 @@ job('ldop/ldop-integration-testing') {
   steps {
     shell(
 """\
-TOPIC="${TOPIC#*/}"
-git checkout ${TOPIC}
+TOPIC="\${TOPIC#*/}"
+git checkout \${TOPIC}
 sed -i "/liatrio\/${IMAGE_NAME}/c\    image: jbankes/${IMAGE_NAME}:${TOPIC}" docker-compose.yml
-export TF_VAR_branch_name="${TOPIC}"
+export TF_VAR_branch_name="\${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
     )
