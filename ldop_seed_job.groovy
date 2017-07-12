@@ -44,8 +44,16 @@ ldopImages.each {
       githubPush()
     }
     steps {
-      shell("docker build -t jbankes/${ldopImageName}:latest .")
-      shell("docker push jbankes/${ldopImageName}:latest")
+      shell(
+"""\
+#!/bin/bash
+
+TOPIC=\"\${GIT_BRANCH#*/}\"
+
+docker build -t jbankes/${ldopImageName}:\${TOPIC} .
+docker push jbankes/${ldopImageName}:\${TOPIC}
+"""
+      )
     }
     publishers {
       downstreamParameterized {
@@ -54,6 +62,7 @@ ldopImages.each {
           parameters {
             predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
             predefinedProp('IMAGE_NAME', ldopImageName)
+            predefinedProp('TOPIC', '\${GIT_BRANCH}')
           }
         }
       }
@@ -93,6 +102,7 @@ job('ldop/ldop-integration-testing') {
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
+    textParam('TOPIC')
   }
   wrappers{
     colorizeOutput()
@@ -109,8 +119,15 @@ job('ldop/ldop-integration-testing') {
     }
   }
   steps {
-    shell('sed -i "/liatrio\\/${IMAGE_NAME}/c\\    image: liatrio/${IMAGE_NAME}:latest" docker-compose.yml')
-    shell('./test/integration/run-integration-test.sh')
+    shell(
+"""\
+TOPIC="${TOPIC#*/}"
+git checkout ${TOPIC}
+sed -i "/liatrio\/${IMAGE_NAME}/c\    image: jbankes/${IMAGE_NAME}:${TOPIC}" docker-compose.yml
+export TF_VAR_branch_name="${TOPIC}"
+./test/integration/run-integration-test.sh
+"""
+    )
   }
   publishers {
     downstreamParameterized {
@@ -130,12 +147,13 @@ job('ldop/ldop-image-deploy') {
   parameters {
     textParam('IMAGE_VERSION')
     textParam('IMAGE_NAME')
+    textParam('TOPIC')
   }
   wrappers{
     colorizeOutput()
   }
   steps {
-    shell('docker tag jbankes/${IMAGE_NAME}:latest jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
+    shell('docker tag jbankes/${IMAGE_NAME}:${TOPIC} jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
     shell('docker push jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
   }
 }
