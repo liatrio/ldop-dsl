@@ -50,8 +50,8 @@ ldopImages.each {
 
 TOPIC=\"\${GIT_BRANCH#*/}\"
 
-docker build -t jbankes/${ldopImageName}:\${TOPIC} .
-docker push jbankes/${ldopImageName}:\${TOPIC}
+docker build -t liatrio/${ldopImageName}:\${TOPIC} .
+docker push liatrio/${ldopImageName}:\${TOPIC}
 """
       )
     }
@@ -123,7 +123,7 @@ job('ldop/ldop-integration-testing') {
 """\
 TOPIC="${TOPIC#*/}"
 git checkout ${TOPIC}
-sed -i "/liatrio\/${IMAGE_NAME}/c\    image: jbankes/${IMAGE_NAME}:${TOPIC}" docker-compose.yml
+sed -i "/liatrio\/${IMAGE_NAME}/c\    image: liatrio/${IMAGE_NAME}:${TOPIC}" docker-compose.yml
 export TF_VAR_branch_name="${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
@@ -153,7 +153,7 @@ job('ldop/ldop-image-deploy') {
     colorizeOutput()
   }
   steps {
-    shell('docker tag jbankes/${IMAGE_NAME}:${TOPIC} jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
-    shell('docker push jbankes/${IMAGE_NAME}:${IMAGE_VERSION}')
+    shell('docker tag liatrio/${IMAGE_NAME}:${TOPIC} liatrio/${IMAGE_NAME}:${IMAGE_VERSION}')
+    shell('docker push liatrio/${IMAGE_NAME}:${IMAGE_VERSION}')
   }
 }
