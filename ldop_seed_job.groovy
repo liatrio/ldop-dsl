@@ -153,7 +153,12 @@ job('ldop/ldop-image-deploy') {
     colorizeOutput()
   }
   steps {
-    shell('docker tag liatrio/${IMAGE_NAME}:${TOPIC} liatrio/${IMAGE_NAME}:${IMAGE_VERSION}')
-    shell('docker push liatrio/${IMAGE_NAME}:${IMAGE_VERSION}')
+    shell(
+"""\
+TOPIC="\${TOPIC#*/}"
+docker tag liatrio/\${IMAGE_NAME}:\${TOPIC} liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
+docker push liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
+"""
+    )
   }
 }
