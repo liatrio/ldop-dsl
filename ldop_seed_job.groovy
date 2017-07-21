@@ -99,6 +99,27 @@ export TF_VAR_branch_name="\${TOPIC}"
 """
     ) 
   }
+  publishers {
+    slackNotifier {
+      notifyFailure(true)
+      notifySuccess(true)
+      notifyAborted(false)
+      notifyNotBuilt(false)
+      notifyUnstable(false)
+      notifyBackToNormal(true)
+      notifyRepeatedFailure(false)
+      startNotification(true)
+      includeTestSummary(true)
+      includeCustomMessage(false)
+      customMessage(null)
+      buildServerUrl(null)
+      sendAs(null)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      teamDomain(null)
+      authToken(null)
+      room('ldop')
+    }
+  }
 }
 
 // Create LDOP Integration Testing Job
@@ -143,6 +164,25 @@ export TF_VAR_branch_name="\${TOPIC}"
           currentBuild()
         }
       }
+    }
+    slackNotifier {
+      notifyFailure(true)
+      notifySuccess(true)
+      notifyAborted(false)
+      notifyNotBuilt(false)
+      notifyUnstable(false)
+      notifyBackToNormal(true)
+      notifyRepeatedFailure(false)
+      startNotification(true)
+      includeTestSummary(true)
+      includeCustomMessage(false)
+      customMessage(null)
+      buildServerUrl(null)
+      sendAs(null)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      teamDomain(null)
+      authToken(null)
+      room('ldop')
     }
   }
 }
