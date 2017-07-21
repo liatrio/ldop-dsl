@@ -91,7 +91,13 @@ job('ldop/ldop-docker-compose') {
     githubPush()
   } 
   steps {
-    shell('./test/integration/run-integration-test.sh') 
+    shell(
+"""\
+TOPIC=\"\${GIT_BRANCH#*/}\"
+export TF_VAR_branch_name="\${TOPIC}"
+./test/integration/run-integration-test.sh
+"""
+    ) 
   }
 }
 
