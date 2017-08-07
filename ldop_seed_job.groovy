@@ -1,11 +1,11 @@
 // file: ldop-seed-job.groovy
 // authored: Justin Bankes on 6.19.17
-// Last Modified:
+// Last Modified: 8.07.2017 by Hunter Mayers
 folder('ldop')
 
 // Create LDOP image jobs
-def ldopImages = ['ldop-gerrit', 
-                  'ldop-jenkins', 
+def ldopImages = ['ldop-gerrit',
+                  'ldop-jenkins',
                   'ldop-jenkins-slave',
                   'ldop-ldap',
                   'ldop-ldap-ltb',
@@ -57,7 +57,7 @@ docker push liatrio/${ldopImageName}:\${TOPIC}
     }
     publishers {
       downstreamParameterized {
-        trigger('ldop/ldop-integration-testing') { 
+        trigger('ldop/ldop-integration-testing') {
           condition('SUCCESS')
           parameters {
             predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
@@ -65,6 +65,24 @@ docker push liatrio/${ldopImageName}:\${TOPIC}
             predefinedProp('TOPIC', '\${GIT_BRANCH}')
           }
         }
+      }
+      slackNotifier {
+        notifyFailure(true)
+        notifySuccess(false)
+        notifyAborted(false)
+        notifyNotBuilt(false)
+        notifyUnstable(false)
+        notifyBackToNormal(true)
+        notifyRepeatedFailure(false)
+        startNotification(false)
+        includeTestSummary(false)
+        includeCustomMessage(false)
+        customMessage(null)
+        sendAs(null)
+        commitInfoChoice('AUTHORS_AND_TITLES')
+        teamDomain(null)
+        authToken(null)
+        room('ldop')
       }
     }
   }
@@ -89,7 +107,7 @@ job('ldop/ldop-docker-compose') {
   }
   triggers {
     githubPush()
-  } 
+  }
   steps {
     shell(
 """\
@@ -97,7 +115,27 @@ TOPIC=\"\${GIT_BRANCH#*/}\"
 export TF_VAR_branch_name="\${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
-    ) 
+    )
+  }
+  publishers {
+    slackNotifier {
+      notifyFailure(true)
+      notifySuccess(false)
+      notifyAborted(false)
+      notifyNotBuilt(false)
+      notifyUnstable(false)
+      notifyBackToNormal(true)
+      notifyRepeatedFailure(false)
+      startNotification(false)
+      includeTestSummary(false)
+      includeCustomMessage(false)
+      customMessage(null)
+      sendAs(null)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      teamDomain(null)
+      authToken(null)
+      room('ldop')
+    }
   }
 }
 
@@ -137,12 +175,30 @@ export TF_VAR_branch_name="\${TOPIC}"
   }
   publishers {
     downstreamParameterized {
-      trigger('ldop/ldop-image-deploy') { 
+      trigger('ldop/ldop-image-deploy') {
         condition('SUCCESS')
         parameters {
           currentBuild()
         }
       }
+    }
+    slackNotifier {
+      notifyFailure(true)
+      notifySuccess(false)
+      notifyAborted(false)
+      notifyNotBuilt(false)
+      notifyUnstable(false)
+      notifyBackToNormal(true)
+      notifyRepeatedFailure(false)
+      startNotification(false)
+      includeTestSummary(false)
+      includeCustomMessage(false)
+      customMessage(null)
+      sendAs(null)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      teamDomain(null)
+      authToken(null)
+      room('ldop')
     }
   }
 }
@@ -166,5 +222,25 @@ docker tag liatrio/\${IMAGE_NAME}:\${TOPIC} liatrio/\${IMAGE_NAME}:\${IMAGE_VERS
 docker push liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
 """
     )
+  }
+  publishers {
+    slackNotifier {
+      notifyFailure(true)
+      notifySuccess(false)
+      notifyAborted(false)
+      notifyNotBuilt(false)
+      notifyUnstable(false)
+      notifyBackToNormal(true)
+      notifyRepeatedFailure(false)
+      startNotification(false)
+      includeTestSummary(false)
+      includeCustomMessage(false)
+      customMessage(null)
+      sendAs(null)
+      commitInfoChoice('AUTHORS_AND_TITLES')
+      teamDomain(null)
+      authToken(null)
+      room('ldop')
+    }
   }
 }
