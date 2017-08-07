@@ -1,5 +1,4 @@
 #!/bin/bash
-# Author: Justin Bankes
 # Last Modified: 8/7/2017 
 # Description: 
 #   Validates git tags and verifies 
