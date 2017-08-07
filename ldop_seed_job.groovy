@@ -1,6 +1,4 @@
 // file: ldop-seed-job.groovy
-// authored: Justin Bankes on 6.19.17
-// Last Modified: 8.07.2017 by Hunter Mayers
 folder('ldop')
 
 // Create LDOP image jobs
@@ -20,13 +18,14 @@ ldopImages.each {
   ldopImageName->
 
   def repoURL = "https://github.com/liatrio/" + ldopImageName + ".git"
+  def validateJobName = ldopImageName + '-0-validate'
   def singleImageJobName = ldopImageName + '-1-build'
 
-  job('ldop/' + singleImageJobName){
+  job('ldop/' + validateJobName) {
     description('This job was created with automation. Manual edits to this job are discouraged.')
-    wrappers {
+    wrappers{
       colorizeOutput()
-    }
+    } 
     properties {
       githubProjectUrl(repoURL)
     }
@@ -43,13 +42,80 @@ ldopImages.each {
     triggers {
       githubPush()
     }
+    steps{
+      shell(
+"""\
+#!/bin/bash
+if [ -z \${GIT_TAG_NAME} ]; then
+  echo \"ERROR: No git tag for version, exiting failure\" && exit 1
+else
+  echo \"Git tag: \${GIT_TAG_NAME}\"
+fi
+if [[ \"\${GIT_TAG_NAME}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\$ ]]; then
+  echo \"version format accepted\"
+else
+  echo \"ERROR: version format incorrect; exiting failure\" && exit 1
+fi
+TOPIC=\"\${GIT_BRANCH#*/}\"
+"""
+      )
+    }
+    publishers {
+      downstreamParameterized {
+        trigger("ldop/$singleImageJobName") { 
+          condition('SUCCESS')
+          parameters {
+            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
+            predefinedProp('IMAGE_NAME', ldopImageName)
+            predefinedProp('TOPIC', '\${GIT_BRANCH}')
+          }
+        }
+      }
+      slackNotifier {
+        notifyFailure(true)
+        notifySuccess(false)
+        notifyAborted(false)
+        notifyNotBuilt(false)
+        notifyUnstable(false)
+        notifyBackToNormal(true)
+        notifyRepeatedFailure(false)
+        startNotification(false)
+        includeTestSummary(false)
+        includeCustomMessage(false)
+        customMessage(null)
+        sendAs(null)
+        commitInfoChoice('AUTHORS_AND_TITLES')
+        teamDomain(null)
+        authToken(null)
+        room('ldop')
+      }
+    }
+  }
+
+  job('ldop/' + singleImageJobName) {
+    description('This job was created with automation. Manual edits to this job are discouraged.')
+    parameters {
+      textParam('IMAGE_VERSION')
+      textParam('IMAGE_NAME')
+      textParam('TOPIC')
+    }
+    wrappers {
+      colorizeOutput()
+    }
+    properties {
+      githubProjectUrl(repoURL)
+    }
+    scm {
+      git {
+        remote {
+          url(repoURL)
+        }
+      }
+    }
     steps {
       shell(
 """\
 #!/bin/bash
-
-TOPIC=\"\${GIT_BRANCH#*/}\"
-
 docker build -t liatrio/${ldopImageName}:\${TOPIC} .
 docker push liatrio/${ldopImageName}:\${TOPIC}
 """
@@ -60,9 +126,7 @@ docker push liatrio/${ldopImageName}:\${TOPIC}
         trigger('ldop/ldop-integration-testing') {
           condition('SUCCESS')
           parameters {
-            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
-            predefinedProp('IMAGE_NAME', ldopImageName)
-            predefinedProp('TOPIC', '\${GIT_BRANCH}')
+            currentBuild()
           }
         }
       }
