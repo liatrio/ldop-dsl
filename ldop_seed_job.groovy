@@ -56,6 +56,7 @@ if [[ \"\${GIT_TAG_NAME}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\$ ]]; then
 else
   echo \"ERROR: version format incorrect; exiting failure\" && exit 1
 fi
+
 TOPIC=\"\${GIT_BRANCH#*/}\"
 """
       )
@@ -67,7 +68,7 @@ TOPIC=\"\${GIT_BRANCH#*/}\"
           parameters {
             predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
             predefinedProp('IMAGE_NAME', ldopImageName)
-            predefinedProp('TOPIC', '\${GIT_BRANCH}')
+            predefinedProp('TOPIC', '\${TOPIC}')
           }
         }
       }
