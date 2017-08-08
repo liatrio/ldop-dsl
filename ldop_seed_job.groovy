@@ -116,8 +116,8 @@ TOPIC=\"\${GIT_BRANCH#*/}\"
       shell(
 """\
 #!/bin/bash
-docker build -t liatrio/${ldopImageName}:\${TOPIC} .
-docker push liatrio/${ldopImageName}:\${TOPIC}
+docker build -t liatrio/\${IMAGE_NAME}:\${TOPIC} .
+docker push liatrio/\${IMAGE_NAME}:\${TOPIC}
 """
       )
     }
