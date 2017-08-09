@@ -15,220 +15,246 @@ def ldopImages = ['ldop-gerrit',
                   'ldop-sonar']
 
 ldopImages.each {
-  ldopImageName->
+    ldopImageName->
 
-  def repoURL = "https://github.com/liatrio/" + ldopImageName + ".git"
-  def validateJobName = ldopImageName + '-0-validate'
-  def singleImageJobName = ldopImageName + '-1-build'
+    def repoURL = "https://github.com/liatrio/" + ldopImageName + ".git"
+    def validateJobName = ldopImageName + '-0-validate'
+    def singleImageJobName = ldopImageName + '-1-build'
 
-  job('ldop/' + validateJobName) {
-    description('This job was created with automation. Manual edits to this job are discouraged.')
-    wrappers{
-      colorizeOutput()
-    } 
-    properties {
-      githubProjectUrl(repoURL)
-    }
-    scm {
-      git {
-        remote {
-          url(repoURL)
+    job('ldop/' + validateJobName) {
+        description('This job was created with automation. Manual edits to this job are discouraged.')
+        wrappers{
+            colorizeOutput()
         }
-        extensions {
-          gitTagMessageExtension()
+        properties {
+            githubProjectUrl(repoURL)
         }
-      }
-    }
-    triggers {
-      githubPush()
-    }
-    steps{
-      shell(
+        scm {
+            git {
+                remote {
+                    url(repoURL)
+                }
+                extensions {
+                    gitTagMessageExtension()
+                }
+            }
+        }
+        triggers {
+            githubPush()
+        }
+        steps{
+            shell(
 """\
 #!/bin/bash
 if [ -z \${GIT_TAG_NAME} ]; then
-  echo \"ERROR: No git tag for version, exiting failure\" && exit 1
+    echo \"ERROR: No git tag for version, exiting failure\" && exit 1
 else
-  echo \"Git tag: \${GIT_TAG_NAME}\"
+    echo \"Git tag: \${GIT_TAG_NAME}\"
 fi
 if [[ \"\${GIT_TAG_NAME}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\$ ]]; then
-  echo \"version format accepted\"
+    echo \"version format accepted\"
 else
-  echo \"ERROR: version format incorrect; exiting failure\" && exit 1
+    echo \"ERROR: version format incorrect; exiting failure\" && exit 1
+fi
+
+echo -e "\\nrunning hadolint..."
+docker run --rm -i lukasmartinelli/hadolint < Dockerfile
+if [ -n \$? ]; then
+    echo -e "Hadolint found errors, continuing.\\n"
+else
+    echo -e "Hadolint passed without errors\\n"
+fi
+
+echo "\\nrunning dockerlint..."
+docker run -it --rm -v "\$PWD/Dockerfile":/Dockerfile:ro \\
+redcoolbeans/dockerlint
+if [ -n \$? ]; then
+    echo -e "Dockerlint found errors, continuing.\\n"
+else
+    echo -e "Dockerlint passed without errors\\n"
+fi
+
+echo -e "\\nrunning dockerfile_lint..."
+docker run -it --rm -v `pwd`:/root/ projectatomic/dockerfile-lint \\
+    dockerfile_lint -f Dockerfile
+if [ -n \$? ]; then
+    echo -e "Dockerlint found errors, continuing.\\n"
+else
+    echo -e "Dockerlint passed without errors\\n"
 fi
 
 TOPIC=\"\${GIT_BRANCH#*/}\"
 """
-      )
-    }
-    publishers {
-      downstreamParameterized {
-        trigger("ldop/$singleImageJobName") { 
-          condition('SUCCESS')
-          parameters {
-            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
-            predefinedProp('IMAGE_NAME', ldopImageName)
-            predefinedProp('TOPIC', '\${TOPIC}')
-          }
+            )
         }
-      }
-      slackNotifier {
-        notifyFailure(true)
-        notifySuccess(false)
-        notifyAborted(false)
-        notifyNotBuilt(false)
-        notifyUnstable(false)
-        notifyBackToNormal(true)
-        notifyRepeatedFailure(false)
-        startNotification(false)
-        includeTestSummary(false)
-        includeCustomMessage(false)
-        customMessage(null)
-        sendAs(null)
-        commitInfoChoice('AUTHORS_AND_TITLES')
-        teamDomain(null)
-        authToken(null)
-        room('ldop')
-      }
+        publishers {
+            downstreamParameterized {
+                trigger("ldop/$singleImageJobName") {
+                    condition('SUCCESS')
+                    parameters {
+                        predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
+                        predefinedProp('IMAGE_NAME', ldopImageName)
+                        predefinedProp('TOPIC', '\${TOPIC}')
+                    }
+                }
+            }
+            slackNotifier {
+                notifyFailure(true)
+                notifySuccess(false)
+                notifyAborted(false)
+                notifyNotBuilt(false)
+                notifyUnstable(false)
+                notifyBackToNormal(true)
+                notifyRepeatedFailure(false)
+                startNotification(false)
+                includeTestSummary(false)
+                includeCustomMessage(false)
+                customMessage(null)
+                sendAs(null)
+                commitInfoChoice('AUTHORS_AND_TITLES')
+                teamDomain(null)
+                authToken(null)
+                room('ldop')
+            }
+        }
     }
-  }
 
-  job('ldop/' + singleImageJobName) {
-    description('This job was created with automation. Manual edits to this job are discouraged.')
-    parameters {
-      textParam('IMAGE_VERSION')
-      textParam('IMAGE_NAME')
-      textParam('TOPIC')
-    }
-    wrappers {
-      colorizeOutput()
-    }
-    properties {
-      githubProjectUrl(repoURL)
-    }
-    scm {
-      git {
-        remote {
-          url(repoURL)
+    job('ldop/' + singleImageJobName) {
+        description('This job was created with automation. Manual edits to this job are discouraged.')
+        parameters {
+            textParam('IMAGE_VERSION')
+            textParam('IMAGE_NAME')
+            textParam('TOPIC')
         }
-      }
-    }
-    steps {
-      shell(
+        wrappers {
+            colorizeOutput()
+        }
+        properties {
+            githubProjectUrl(repoURL)
+        }
+        scm {
+            git {
+                remote {
+                    url(repoURL)
+                }
+            }
+        }
+        steps {
+            shell(
 """\
 #!/bin/bash
 docker build -t liatrio/\${IMAGE_NAME}:\${TOPIC} .
 docker push liatrio/\${IMAGE_NAME}:\${TOPIC}
 """
-      )
-    }
-    publishers {
-      downstreamParameterized {
-        trigger('ldop/ldop-integration-testing') {
-          condition('SUCCESS')
-          parameters {
-            currentBuild()
-          }
+            )
         }
-      }
-      slackNotifier {
-        notifyFailure(true)
-        notifySuccess(false)
-        notifyAborted(false)
-        notifyNotBuilt(false)
-        notifyUnstable(false)
-        notifyBackToNormal(true)
-        notifyRepeatedFailure(true)
-        startNotification(false)
-        includeTestSummary(false)
-        includeCustomMessage(false)
-        customMessage(null)
-        sendAs(null)
-        commitInfoChoice('AUTHORS_AND_TITLES')
-        teamDomain(null)
-        authToken(null)
-        room('ldop')
-      }
+        publishers {
+            downstreamParameterized {
+                trigger('ldop/ldop-integration-testing') {
+                    condition('SUCCESS')
+                    parameters {
+                        currentBuild()
+                    }
+                }
+            }
+            slackNotifier {
+                notifyFailure(true)
+                notifySuccess(false)
+                notifyAborted(false)
+                notifyNotBuilt(false)
+                notifyUnstable(false)
+                notifyBackToNormal(true)
+                notifyRepeatedFailure(true)
+                startNotification(false)
+                includeTestSummary(false)
+                includeCustomMessage(false)
+                customMessage(null)
+                sendAs(null)
+                commitInfoChoice('AUTHORS_AND_TITLES')
+                teamDomain(null)
+                authToken(null)
+                room('ldop')
+            }
+        }
     }
-  }
 }
 
 // Create LDOP Docker Compose Job
 job('ldop/ldop-docker-compose') {
-  def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
-  description('This job was created with automation. Manual edits to this job are discouraged.')
-  wrappers{
-    colorizeOutput()
-  }
-  properties {
-    githubProjectUrl(repoURL)
-  }
-  scm {
-    git {
-      remote {
-        url(repoURL)
-      }
+    def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
+    description('This job was created with automation. Manual edits to this job are discouraged.')
+    wrappers{
+        colorizeOutput()
     }
-  }
-  triggers {
-    githubPush()
-  }
-  steps {
-    shell(
+    properties {
+        githubProjectUrl(repoURL)
+    }
+    scm {
+        git {
+            remote {
+                url(repoURL)
+            }
+        }
+    }
+    triggers {
+        githubPush()
+    }
+    steps {
+        shell(
 """\
 TOPIC=\"\${GIT_BRANCH#*/}\"
 export TF_VAR_branch_name="\${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
-    )
-  }
-  publishers {
-    slackNotifier {
-      notifyFailure(true)
-      notifySuccess(false)
-      notifyAborted(false)
-      notifyNotBuilt(false)
-      notifyUnstable(false)
-      notifyBackToNormal(true)
-      notifyRepeatedFailure(true)
-      startNotification(false)
-      includeTestSummary(false)
-      includeCustomMessage(false)
-      customMessage(null)
-      sendAs(null)
-      commitInfoChoice('AUTHORS_AND_TITLES')
-      teamDomain(null)
-      authToken(null)
-      room('ldop')
+        )
     }
-  }
+    publishers {
+        slackNotifier {
+            notifyFailure(true)
+            notifySuccess(false)
+            notifyAborted(false)
+            notifyNotBuilt(false)
+            notifyUnstable(false)
+            notifyBackToNormal(true)
+            notifyRepeatedFailure(true)
+            startNotification(false)
+            includeTestSummary(false)
+            includeCustomMessage(false)
+            customMessage(null)
+            sendAs(null)
+            commitInfoChoice('AUTHORS_AND_TITLES')
+            teamDomain(null)
+            authToken(null)
+            room('ldop')
+        }
+    }
 }
 
 // Create LDOP Integration Testing Job
 job('ldop/ldop-integration-testing') {
-  def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
-  description('This job was created with automation. Manual edits to this job are discouraged.')
-  parameters {
-    textParam('IMAGE_VERSION')
-    textParam('IMAGE_NAME')
-    textParam('TOPIC')
-  }
-  wrappers{
-    colorizeOutput()
-  }
-  properties {
-    githubProjectUrl(repoURL)
-  }
-  scm {
-    git {
-      remote {
-        url(repoURL)
-      }
-      branch('master')
+    def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
+    description('This job was created with automation. Manual edits to this job are discouraged.')
+    parameters {
+        textParam('IMAGE_VERSION')
+        textParam('IMAGE_NAME')
+        textParam('TOPIC')
     }
-  }
-  steps {
-    shell(
+    wrappers{
+        colorizeOutput()
+    }
+    properties {
+        githubProjectUrl(repoURL)
+    }
+    scm {
+        git {
+            remote {
+                url(repoURL)
+            }
+            branch('master')
+        }
+    }
+    steps {
+        shell(
 """\
 TOPIC="\${TOPIC#*/}"
 git checkout \${TOPIC}
@@ -236,76 +262,76 @@ sed -i "/liatrio\\/\${IMAGE_NAME}/c\\    image: liatrio/\${IMAGE_NAME}:\${TOPIC}
 export TF_VAR_branch_name="\${TOPIC}"
 ./test/integration/run-integration-test.sh
 """
-    )
-  }
-  publishers {
-    downstreamParameterized {
-      trigger('ldop/ldop-image-deploy') {
-        condition('SUCCESS')
-        parameters {
-          currentBuild()
+        )
+    }
+    publishers {
+        downstreamParameterized {
+            trigger('ldop/ldop-image-deploy') {
+                condition('SUCCESS')
+                parameters {
+                    currentBuild()
+                }
+            }
         }
-      }
+        slackNotifier {
+            notifyFailure(true)
+            notifySuccess(false)
+            notifyAborted(false)
+            notifyNotBuilt(false)
+            notifyUnstable(false)
+            notifyBackToNormal(true)
+            notifyRepeatedFailure(true)
+            startNotification(false)
+            includeTestSummary(false)
+            includeCustomMessage(false)
+            customMessage(null)
+            sendAs(null)
+            commitInfoChoice('AUTHORS_AND_TITLES')
+            teamDomain(null)
+            authToken(null)
+            room('ldop')
+        }
     }
-    slackNotifier {
-      notifyFailure(true)
-      notifySuccess(false)
-      notifyAborted(false)
-      notifyNotBuilt(false)
-      notifyUnstable(false)
-      notifyBackToNormal(true)
-      notifyRepeatedFailure(true)
-      startNotification(false)
-      includeTestSummary(false)
-      includeCustomMessage(false)
-      customMessage(null)
-      sendAs(null)
-      commitInfoChoice('AUTHORS_AND_TITLES')
-      teamDomain(null)
-      authToken(null)
-      room('ldop')
-    }
-  }
 }
 
 // Create LDOP Image Deployment Jobs
 job('ldop/ldop-image-deploy') {
-  description('This job was created with automation. Manual edits to this job are discouraged.')
-  parameters {
-    textParam('IMAGE_VERSION')
-    textParam('IMAGE_NAME')
-    textParam('TOPIC')
-  }
-  wrappers{
-    colorizeOutput()
-  }
-  steps {
-    shell(
+    description('This job was created with automation. Manual edits to this job are discouraged.')
+    parameters {
+        textParam('IMAGE_VERSION')
+        textParam('IMAGE_NAME')
+        textParam('TOPIC')
+    }
+    wrappers{
+        colorizeOutput()
+    }
+    steps {
+        shell(
 """\
 TOPIC="\${TOPIC#*/}"
 docker tag liatrio/\${IMAGE_NAME}:\${TOPIC} liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
 docker push liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
 """
-    )
-  }
-  publishers {
-    slackNotifier {
-      notifyFailure(true)
-      notifySuccess(false)
-      notifyAborted(false)
-      notifyNotBuilt(false)
-      notifyUnstable(false)
-      notifyBackToNormal(true)
-      notifyRepeatedFailure(true)
-      startNotification(false)
-      includeTestSummary(false)
-      includeCustomMessage(false)
-      customMessage(null)
-      sendAs(null)
-      commitInfoChoice('AUTHORS_AND_TITLES')
-      teamDomain(null)
-      authToken(null)
-      room('ldop')
+        )
     }
-  }
+    publishers {
+        slackNotifier {
+            notifyFailure(true)
+            notifySuccess(false)
+            notifyAborted(false)
+            notifyNotBuilt(false)
+            notifyUnstable(false)
+            notifyBackToNormal(true)
+            notifyRepeatedFailure(true)
+            startNotification(false)
+            includeTestSummary(false)
+            includeCustomMessage(false)
+            customMessage(null)
+            sendAs(null)
+            commitInfoChoice('AUTHORS_AND_TITLES')
+            teamDomain(null)
+            authToken(null)
+            room('ldop')
+        }
+    }
 }
