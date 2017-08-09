@@ -65,8 +65,8 @@ else
     echo -e "Hadolint passed without errors\\n"
 fi
 
-echo "\\nrunning dockerlint..."
-docker run -it --rm -v "\$PWD/Dockerfile":/Dockerfile:ro \\
+echo -e "\\nrunning dockerlint..."
+docker run -i --rm -v "\$PWD/Dockerfile":/Dockerfile:ro \\
 redcoolbeans/dockerlint
 if [ -n \$? ]; then
     echo -e "Dockerlint found errors, continuing.\\n"
@@ -75,7 +75,7 @@ else
 fi
 
 echo -e "\\nrunning dockerfile_lint..."
-docker run -it --rm -v `pwd`:/root/ projectatomic/dockerfile-lint \\
+docker run -i --rm -v `pwd`:/root/ projectatomic/dockerfile-lint \\
     dockerfile_lint -f Dockerfile
 if [ -n \$? ]; then
     echo -e "Dockerlint found errors, continuing.\\n"
