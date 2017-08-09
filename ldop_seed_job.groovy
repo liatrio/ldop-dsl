@@ -56,20 +56,11 @@ if [[ \"\${GIT_TAG_NAME}\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\$ ]]; then
 else
   echo \"ERROR: version format incorrect; exiting failure\" && exit 1
 fi
-
-TOPIC=\"\${GIT_BRANCH#*/}\"
 """
       )
     }
     publishers {
-      downstreamParameterized {
-        trigger("ldop/$singleImageJobName") { 
-          condition('SUCCESS')
-          parameters {
-            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
-            predefinedProp('IMAGE_NAME', ldopImageName)
-            predefinedProp('TOPIC', '\${TOPIC}')
-          }
+      downstream("ldop/$singleImageJobName", 'SUCCESS')
         }
       }
       slackNotifier {
@@ -95,11 +86,6 @@ TOPIC=\"\${GIT_BRANCH#*/}\"
 
   job('ldop/' + singleImageJobName) {
     description('This job was created with automation. Manual edits to this job are discouraged.')
-    parameters {
-      textParam('IMAGE_VERSION')
-      textParam('IMAGE_NAME')
-      textParam('TOPIC')
-    }
     wrappers {
       colorizeOutput()
     }
@@ -111,12 +97,16 @@ TOPIC=\"\${GIT_BRANCH#*/}\"
         remote {
           url(repoURL)
         }
+        extensions {
+          gitTagMessageExtension()
+        }
       }
     }
     steps {
       shell(
 """\
 #!/bin/bash
+TOPIC=\"\${GIT_BRANCH#*/}\"
 docker build -t liatrio/\${IMAGE_NAME}:\${TOPIC} .
 docker push liatrio/\${IMAGE_NAME}:\${TOPIC}
 """
@@ -127,7 +117,9 @@ docker push liatrio/\${IMAGE_NAME}:\${TOPIC}
         trigger('ldop/ldop-integration-testing') {
           condition('SUCCESS')
           parameters {
-            currentBuild()
+            predefinedProp('IMAGE_VERSION', '\${GIT_TAG_NAME}')
+            predefinedProp('IMAGE_NAME', ldopImageName)
+            predefinedProp('TOPIC', '\${GIT_BRANCH}')
           }
         }
       }
