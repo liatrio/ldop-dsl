@@ -131,8 +131,8 @@ fi
 """\
 #!/bin/bash
 TOPIC=\"\${GIT_BRANCH#*/}\"
-docker build -t liatrio/$singleImageJobName:\${TOPIC} .
-docker push liatrio/$singleImageJobName:\${TOPIC}
+docker build -t liatrio/$ldopImageName:\${TOPIC} .
+docker push liatrio/$ldopImageName:\${TOPIC}
 """
             )
         }
