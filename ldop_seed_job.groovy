@@ -59,7 +59,7 @@ fi
 
 echo -e "\\nrunning hadolint..."
 docker run --rm -i lukasmartinelli/hadolint < Dockerfile
-if [ -n \$? ]; then
+if [ \$? -ne 0 ]; then
     echo -e "Hadolint found errors, continuing.\\n"
 else
     echo -e "Hadolint passed without errors\\n"
@@ -68,7 +68,7 @@ fi
 echo -e "\\nrunning dockerlint..."
 docker run -i --rm -v "\$PWD/Dockerfile":/Dockerfile:ro \\
 redcoolbeans/dockerlint
-if [ -n \$? ]; then
+if [ \$? -ne 0 ]; then
     echo -e "Dockerlint found errors, continuing.\\n"
 else
     echo -e "Dockerlint passed without errors\\n"
@@ -77,7 +77,7 @@ fi
 echo -e "\\nrunning dockerfile_lint..."
 docker run -i --rm -v `pwd`:/root/ projectatomic/dockerfile-lint \\
     dockerfile_lint -f Dockerfile
-if [ -n \$? ]; then
+if [ \$? -ne  0]; then
     echo -e "Dockerlint found errors, continuing.\\n"
 else
     echo -e "Dockerlint passed without errors\\n"
@@ -192,8 +192,17 @@ job('ldop/ldop-docker-compose') {
     steps {
         shell(
 """\
+echo -e \"Running Validation on extensions\"
+./test/validation/validation.sh
+if [ \$? -ne 0 ]; then
+    echo \"Extensions has issues; exiting failure\"
+    exit 1
+else 
+    echo -e \"Validation successful\\n\"
+fi
 TOPIC=\"\${GIT_BRANCH#*/}\"
 export TF_VAR_branch_name="\${TOPIC}"
+echo \"Running integration tests\"
 ./test/integration/run-integration-test.sh
 """
         )
