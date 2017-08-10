@@ -192,13 +192,13 @@ job('ldop/ldop-docker-compose') {
     steps {
         shell(
 """\
-echo -e \"Running Validation on extensions\"
+echo \"Running Validation on extensions\"
 ./test/validation/validation.sh
 if [ \$? -ne 0 ]; then
     echo \"Extensions has issues; exiting failure\"
     exit 1
 else 
-    echo -e \"Validation successful\\n\"
+    echo \"Validation successful\"
 fi
 TOPIC=\"\${GIT_BRANCH#*/}\"
 export TF_VAR_branch_name="\${TOPIC}"
