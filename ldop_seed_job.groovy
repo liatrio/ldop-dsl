@@ -23,7 +23,7 @@ ldopImages.each {
 
     job('ldop/' + validateJobName) {
         description('This job was created with automation. Manual edits to this job are discouraged.')
-        discardOldBuilds(-1, 15)
+        logRotator(-1, 15, -1, 3)
         wrappers{
             colorizeOutput()
         }
@@ -111,7 +111,7 @@ fi
 
     job('ldop/' + singleImageJobName) {
         description('This job was created with automation. Manual edits to this job are discouraged.')
-        discardOldBuilds(-1, 15)
+        logRotator(-1, 15, -1, 3)
         wrappers {
             colorizeOutput()
         }
@@ -175,7 +175,7 @@ docker push liatrio/$ldopImageName:\${TOPIC}
 job('ldop/ldop-docker-compose') {
     def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
     description('This job was created with automation. Manual edits to this job are discouraged.')
-    discardOldBuilds(-1, 15)
+    logRotator(-1, 15, -1, 3)
     wrappers{
         colorizeOutput()
     }
@@ -236,7 +236,7 @@ echo \"Running integration tests\"
 job('ldop/ldop-integration-testing') {
     def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
     description('This job was created with automation. Manual edits to this job are discouraged.')
-    discardOldBuilds(-1, 15)
+    logRotator(-1, 15, -1, 3)
     parameters {
         textParam('IMAGE_VERSION')
         textParam('IMAGE_NAME')
@@ -277,7 +277,7 @@ export TF_VAR_branch_name="\${TOPIC}"
             }
         }
         publishBuild {
-            discardOldBuilds(-1, 15)
+            logRotator(-1, 15, -1, 3)
         }
         slackNotifier {
             notifyFailure(true)
@@ -302,7 +302,7 @@ export TF_VAR_branch_name="\${TOPIC}"
 
 // Create LDOP Image Deployment Jobs
 job('ldop/ldop-image-deploy') {
-    discardOldBuilds(-1, 15)
+    logRotator(-1, 15, -1, 3)
     description('This job was created with automation. Manual edits to this job are discouraged.')
     parameters {
         textParam('IMAGE_VERSION')
