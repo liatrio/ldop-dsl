@@ -23,6 +23,7 @@ ldopImages.each {
 
     job('ldop/' + validateJobName) {
         description('This job was created with automation. Manual edits to this job are discouraged.')
+        logRotator(-1, 15, -1, 3)
         wrappers{
             colorizeOutput()
         }
@@ -110,6 +111,7 @@ fi
 
     job('ldop/' + singleImageJobName) {
         description('This job was created with automation. Manual edits to this job are discouraged.')
+        logRotator(-1, 15, -1, 3)
         wrappers {
             colorizeOutput()
         }
@@ -173,6 +175,7 @@ docker push liatrio/$ldopImageName:\${TOPIC}
 job('ldop/ldop-docker-compose') {
     def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
     description('This job was created with automation. Manual edits to this job are discouraged.')
+    logRotator(-1, 15, -1, 3)
     wrappers{
         colorizeOutput()
     }
@@ -197,7 +200,7 @@ echo \"Running Validation on extensions\"
 if [ \$? -ne 0 ]; then
     echo \"Extensions has issues; exiting failure\"
     exit 1
-else 
+else
     echo \"Validation successful\"
 fi
 TOPIC=\"\${GIT_BRANCH#*/}\"
@@ -233,6 +236,7 @@ echo \"Running integration tests\"
 job('ldop/ldop-integration-testing') {
     def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
     description('This job was created with automation. Manual edits to this job are discouraged.')
+    logRotator(-1, 15, -1, 3)
     parameters {
         textParam('IMAGE_VERSION')
         textParam('IMAGE_NAME')
@@ -295,6 +299,7 @@ export TF_VAR_branch_name="\${TOPIC}"
 
 // Create LDOP Image Deployment Jobs
 job('ldop/ldop-image-deploy') {
+    logRotator(-1, 15, -1, 3)
     description('This job was created with automation. Manual edits to this job are discouraged.')
     parameters {
         textParam('IMAGE_VERSION')
