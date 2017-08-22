@@ -276,9 +276,6 @@ export TF_VAR_branch_name="\${TOPIC}"
                 }
             }
         }
-        publishBuild {
-            logRotator(-1, 15, -1, 3)
-        }
         slackNotifier {
             notifyFailure(true)
             notifySuccess(false)
