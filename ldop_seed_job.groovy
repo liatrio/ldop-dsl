@@ -86,6 +86,9 @@ fi
             )
         }
         publishers {
+            publishBuild {
+                discardOldBuilds(-1, 15)
+            }
             downstream("ldop/$singleImageJobName", 'SUCCESS')
             slackNotifier {
                 notifyFailure(true)
@@ -147,6 +150,9 @@ docker push liatrio/$ldopImageName:\${TOPIC}
                     }
                 }
             }
+            publishBuild {
+                discardOldBuilds(-1, 15)
+            }
             slackNotifier {
                 notifyFailure(true)
                 notifySuccess(false)
@@ -197,7 +203,7 @@ echo \"Running Validation on extensions\"
 if [ \$? -ne 0 ]; then
     echo \"Extensions has issues; exiting failure\"
     exit 1
-else 
+else
     echo \"Validation successful\"
 fi
 TOPIC=\"\${GIT_BRANCH#*/}\"
@@ -208,6 +214,9 @@ echo \"Running integration tests\"
         )
     }
     publishers {
+        publishBuild {
+            discardOldBuilds(-1, 15)
+        }
         slackNotifier {
             notifyFailure(true)
             notifySuccess(false)
@@ -272,6 +281,9 @@ export TF_VAR_branch_name="\${TOPIC}"
                 }
             }
         }
+        publishBuild {
+            discardOldBuilds(-1, 15)
+        }
         slackNotifier {
             notifyFailure(true)
             notifySuccess(false)
@@ -314,6 +326,9 @@ docker push liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
         )
     }
     publishers {
+        publishBuild {
+            discardOldBuilds(-1, 15)
+        }
         slackNotifier {
             notifyFailure(true)
             notifySuccess(false)
