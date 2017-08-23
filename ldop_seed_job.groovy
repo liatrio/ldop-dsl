@@ -339,3 +339,13 @@ docker push liatrio/\${IMAGE_NAME}:\${IMAGE_VERSION}
         }
     }
 }
+
+// Cleanup images jobs
+job('cleanup images') {
+  triggers {
+        cron('00 10 * * *')
+    }
+    steps {
+        shell('docker rmi $(docker images -q)')
+    }
+}
