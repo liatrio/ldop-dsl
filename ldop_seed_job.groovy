@@ -2,16 +2,7 @@
 folder('ldop')
 
 // Create LDOP image jobs
-def ldopImages = ['ldop-gerrit',
-                  'ldop-jenkins',
-                  'ldop-jenkins-slave',
-                  'ldop-ldap',
-                  'ldop-ldap-ltb',
-                  'ldop-logstash',
-                  'ldop-nexus',
-                  'ldop-nginx',
-                  'ldop-sensu',
-                  'ldop-sonar']
+def ldopImages = [/* insert images for DSL CI here */]
 
 ldopImages.each {
     ldopImageName->
