@@ -186,7 +186,7 @@ job('ldop/ldop-docker-compose') {
     }
     triggers {
         githubPullRequest {
-            admin('jbankes')
+            admins(['stein321', 'liatriojoe', 'RobertKelly'])
             orgWhitelist('liatrio')
             useGitHubHooks()
         }
