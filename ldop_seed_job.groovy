@@ -23,7 +23,7 @@ repos.each { repo ->
   	multibranchPipelineJob("${project}/${repo}") {
         branchSources {
             git {
-                remote('https://github.com/$org/$repo')
+                remote("https://github.com/${org}/${repo}")
                 includes('*')
             }
         }
@@ -31,6 +31,9 @@ repos.each { repo ->
             discardOldItems {
                 daysToKeep(7)
             }
+        }
+        triggers {
+            periodic(2)
         }
     }
 }
