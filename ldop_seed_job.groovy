@@ -44,6 +44,9 @@ job("${project}/ldop-docker-compose") {
     def repoURL = 'https://github.com/liatrio/ldop-docker-compose'
     description('This job was created with automation. Manual edits to this job are discouraged.')
     logRotator(-1, 15, -1, 3)
+    parameters {
+        textParam('sha1')
+    }
     wrappers{
         colorizeOutput()
     }
@@ -53,12 +56,18 @@ job("${project}/ldop-docker-compose") {
     scm {
         git {
             remote {
-                url(repoURL)
+                github('liatrio/ldop-docker-compose')
+                refspec('+refs/pull/*:refs/remotes/origin/pr/*')
             }
+            branch('${sha1}')
         }
     }
     triggers {
-        githubPush()
+        githubPullRequest {
+            admins(['stein321', 'liatriojoe', 'RobertKelly'])
+            orgWhitelist('liatrio')
+            useGitHubHooks()
+        }
     }
     steps {
         shell(
