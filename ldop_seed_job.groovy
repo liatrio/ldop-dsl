@@ -111,3 +111,15 @@ echo \"Running integration tests\"
         }
     }
 }
+
+///////////////////////////
+// image cleanup job
+///////////////////////////
+job("${project}/cleanup-images") {
+  triggers {
+    cron('00 10 * * *')
+  }
+  steps {
+    shell('docker rmi -f $(docker images -aq) || echo "some images weren\'t deleted automatically"')
+  }
+}
